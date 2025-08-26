@@ -1,0 +1,211 @@
+-- Members Table
+CREATE TABLE members (
+    member_id         NUMBER(5) PRIMARY KEY,
+    member_name       VARCHAR2(30),
+    member_address    VARCHAR2(50),
+    acc_open_date     DATE,
+    membership_type   VARCHAR2(20),
+    fees_paid         NUMBER(4),
+    max_books_allowed NUMBER(2),
+    penalty_amount    NUMBER(7,2)
+);
+
+-- Book Table
+CREATE TABLE book (
+    book_no      NUMBER(6) PRIMARY KEY,
+    book_name    VARCHAR2(30),
+    author_name  VARCHAR2(30),
+    cost         NUMBER(7,2),
+    category     CHAR(10)
+);
+
+-- Issues Table
+CREATE TABLE issues (
+    lib_issue_id  NUMBER(10) PRIMARY KEY,
+    book_no       NUMBER(6) REFERENCES book(book_no),
+    member_id     NUMBER(5) REFERENCES members(member_id),
+    issue_date    DATE,
+    return_date   DATE
+);
+
+
+-- Members
+INSERT INTO members VALUES (101, 'Ravi Kumar', 'Mumbai', TO_DATE('15-JAN-2006','DD-MON-YYYY'), 'Annual', 500, 5, 100);
+INSERT INTO members VALUES (102, 'Geeta Iyer', 'Pune', TO_DATE('20-FEB-2007','DD-MON-YYYY'), 'Lifetime', 2000, 10, 0);
+INSERT INTO members VALUES (103, 'Rajesh Singh', 'Delhi', TO_DATE('10-MAR-2006','DD-MON-YYYY'), 'Half Yearly', 300, 3, 50);
+INSERT INTO members VALUES (104, 'Girish Rao', 'Chennai', TO_DATE('05-JUL-2008','DD-MON-YYYY'), 'Quarterly', 200, 2, 0);
+
+-- Books
+INSERT INTO book VALUES (7001, 'Learn SQL Basics', 'Loni', 550, 'Database');
+INSERT INTO book VALUES (7002, 'Advanced Oracle SQL', 'Loni', 800, 'Database');
+INSERT INTO book VALUES (7003, 'Fictional Tales', 'John', 450, 'Fiction');
+INSERT INTO book VALUES (7004, 'Science Explained', 'Meera', 600, 'Science');
+INSERT INTO book VALUES (7005, 'Management 101', 'Ravi', 700, 'Management');
+INSERT INTO book VALUES (7006, 'RDBMS Concepts', 'Anil', 650, 'RDBMS');
+INSERT INTO book VALUES (7007, 'SQL in Depth', 'Loni', 500, 'Database');
+
+-- Issues
+INSERT INTO issues VALUES (90001, 7001, 101, TO_DATE('10-JUN-2006','DD-MON-YYYY'), NULL);
+INSERT INTO issues VALUES (90002, 7002, 102, TO_DATE('15-JUL-2006','DD-MON-YYYY'), TO_DATE('20-AUG-2006','DD-MON-YYYY'));
+INSERT INTO issues VALUES (90003, 7003, 101, TO_DATE('01-DEC-2006','DD-MON-YYYY'), NULL);
+INSERT INTO issues VALUES (90004, 7004, 103, TO_DATE('05-JAN-2007','DD-MON-YYYY'), TO_DATE('20-FEB-2007','DD-MON-YYYY'));
+INSERT INTO issues VALUES (90005, 7005, 104, TO_DATE('10-JUL-2007','DD-MON-YYYY'), NULL);
+INSERT INTO issues VALUES (90006, 7006, 101, TO_DATE('20-JUL-2006','DD-MON-YYYY'), NULL);
+
+
+-- 1) BOOKS BY AUTHOR LONI WITH PRICE < 600
+SELECT *
+FROM book
+WHERE cost < 600
+  AND author_name = 'Loni';
+
+
+-- 2) ISSUE DETAILS OF BOOKS NOT RETURNED YET
+SELECT *
+FROM issues
+WHERE return_date IS NULL;
+
+
+-- 3) UPDATE BLANK RETURN_DATE WITH 31-DEC-06 EXCLUDING 7005 AND 7006
+UPDATE issues
+SET return_date = TO_DATE('31-DEC-2006', 'DD-MON-YYYY')
+WHERE return_date IS NULL
+  AND book_no NOT IN (7005,7006);
+
+
+-- 4) ISSUE DETAILS THAT HAVE BOOKS ISSUED FOR MORE THAN 30 DAYS
+SELECT *
+FROM issues
+WHERE (NVL(return_date, SYSDATE) - issue_date) > 30;
+
+
+-- 5) BOOKS WITH PRICE BETWEEN 500 AND 750 AND CATEGORY AS DATABASE
+SELECT *
+FROM book
+WHERE cost BETWEEN 500 AND 750
+  AND category = 'Database';
+
+
+-- 6) BOOKS THAT BELONG TO SCIENCE, DATABASE, FICTION, MANAGEMENT
+SELECT *
+FROM book
+WHERE category IN ('Science','Database','Fiction','Management');
+
+
+-- 7) MEMBERS IN DESCENDING ORDER OF PENALTY
+SELECT *
+FROM members
+ORDER BY penalty_amount DESC;
+
+
+-- 8) BOOKS IN ASCENDING ORDER OF CATEGORY AND DESCENDING ORDER OF PRICE
+SELECT *
+FROM book
+ORDER BY category ASC, cost DESC;
+
+
+-- 9) BOOKS THAT CONTAIN WORD SQL IN NAME
+SELECT *
+FROM book
+WHERE book_name LIKE '%SQL%';
+
+
+-- 10) MEMBERS WHOSE NAME STARTS WITH R OR G AND CONTAINS LETTER I
+SELECT *
+FROM members
+WHERE (member_name LIKE 'R%' OR member_name LIKE 'G%')
+  AND member_name LIKE '%I%';
+
+
+-- 11) BOOK NAME IN INITCAP AND AUTHOR IN UPPERCASE, ORDER BY BOOK NAME DESC
+SELECT INITCAP(book_name) AS book_title,
+       UPPER(author_name) AS author
+FROM book
+ORDER BY book_name DESC;
+
+
+-- 12) ISSUE DETAILS FOR MEMBER 101 WITH ISSUE_DATE AND RETURN_DATE FORMATTED
+SELECT lib_issue_id,
+       TO_CHAR(issue_date, 'Day, Month, DD, YYYY') AS issue_date,
+       TO_CHAR(return_date, 'Day, Month, DD, YYYY') AS return_date
+FROM issues
+WHERE member_id = 101;
+
+
+-- 13) CATEGORY DISPLAYED AS D, S, R, O
+SELECT book_no, book_name, author_name, cost,
+       CASE
+         WHEN category = 'Database' THEN 'D'
+         WHEN category = 'Science'  THEN 'S'
+         WHEN category = 'RDBMS'    THEN 'R'
+         ELSE 'O'
+       END AS category_code
+FROM book;
+
+
+-- 14) MEMBERS THAT BECAME MEMBERS IN 2006
+SELECT *
+FROM members
+WHERE EXTRACT(YEAR FROM acc_open_date) = 2006;
+
+
+-- 15) LIB_ISSUE_ID, ISSUE_DATE, RETURN_DATE AND NO. OF DAYS BOOK WAS ISSUED
+SELECT lib_issue_id, issue_date, return_date,
+       NVL(return_date, SYSDATE) - issue_date AS days_issued
+FROM issues;
+
+
+-- 16) DETAILS OF MEMBERS ORDERED BY DATE OF JOINING
+SELECT *
+FROM members
+ORDER BY acc_open_date;
+
+
+-- 17) COUNT OF TOTAL BOOKS ISSUED TO MEMBER 101
+SELECT COUNT(*) AS books_issued
+FROM issues
+WHERE member_id = 101;
+
+
+-- 18) TOTAL PENALTY DUE FOR ALL MEMBERS
+SELECT SUM(penalty_amount) AS total_penalty
+FROM members;
+
+
+-- 19) TOTAL NUMBER OF MEMBERS
+SELECT COUNT(*) AS total_members
+FROM members;
+
+
+-- 20) TOTAL NUMBER OF BOOKS ISSUED
+SELECT COUNT(*) AS total_books_issued
+FROM issues;
+
+
+-- 21) AVERAGE MEMBERSHIP FEES PAID
+SELECT AVG(fees_paid) AS avg_fees
+FROM members;
+
+
+-- 22) NO. OF MONTHS BETWEEN ISSUE DATE AND RETURN DATE FOR ALL ISSUES
+SELECT lib_issue_id,
+       MONTHS_BETWEEN(NVL(return_date, SYSDATE), issue_date) AS months_issued
+FROM issues;
+
+
+-- 23) LENGTH OF MEMBER’S NAME
+SELECT member_name,
+       LENGTH(member_name) AS name_length
+FROM members;
+
+
+-- 24) FIRST 5 CHARACTERS OF MEMBERSHIP_TYPE
+SELECT member_name,
+       SUBSTR(membership_type,1,5) AS membership_prefix
+FROM members;
+
+
+-- 25) LAST DAY OF THE MONTH OF ISSUE DATE
+SELECT lib_issue_id,
+       LAST_DAY(issue_date) AS last_day_of_month
+FROM issues;
