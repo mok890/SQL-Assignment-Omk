@@ -1,0 +1,104 @@
+import java.util.*;
+
+public class MushroomFarming {
+    public static void main(String[] args) {
+        Farmer farmer= new Farmer("Omkumar");
+        Mushroom[] mushrooms= {
+                new Mushroom("Buttom mushroom"),
+                new Mushroom("Oyster mushroom"),
+                new Mushroom("Other mushroom")
+        };
+        Electricity electricity= new Electricity("Adani",20);
+        Water water= new Water(500);
+        MushroomFarm farm= new MushroomFarm(farmer);
+        Harvest harvest= farm.farmMushrooms(mushrooms,electricity,water,60);
+        harvest.showHarvestDetails();
+        System.out.println("Mushroom farming completed.");
+    }
+    //for isA relationship u can show every farmer isA person or every mushroomFarm isA farm
+//    static class Farm{
+//
+//    }
+    //entity
+    static class Farmer{
+        String name;
+        public Farmer(String name){
+            this.name=name;
+        }
+    }
+    //product
+    static class Mushroom{
+        String type;
+        public Mushroom(String type){
+            this.type=type;
+        }
+        @Override
+        public String toString() {
+            return type;
+        }
+    }
+
+    // Electricity resource class
+    static class Electricity {
+        String provider;
+        int costPerUnit; // Rs per unit
+
+        public Electricity(String provider, int costPerUnit) {
+            this.provider = provider;
+            this.costPerUnit = costPerUnit;
+        }
+    }
+
+    // Water resource class
+    static class Water {
+        int litersPerDay;
+
+        public Water(int litersPerDay) {
+            this.litersPerDay = litersPerDay;
+        }
+    }
+
+
+    // MushroomFarm hasA Farmer
+    static class MushroomFarm {
+        Farmer farmer;
+
+        public MushroomFarm(Farmer farmer) {
+            this.farmer = farmer;
+        }
+
+        // usesA electricity and water, producesA harvest
+        public Harvest farmMushrooms(Mushroom[] mushrooms, Electricity electricity, Water water, int days) {
+            System.out.println(farmer.name + " is farming mushrooms for " + days + " days.");
+            System.out.println("Using electricity from " + electricity.provider + " at cost " + electricity.costPerUnit + " Rs/unit.");
+            System.out.println("Using water: " + water.litersPerDay + " liters per day.");
+            System.out.println("Farming mushrooms: " + Arrays.toString(mushrooms));
+
+            // Calculate cost
+            float cost = (electricity.costPerUnit * days*10) + (water.litersPerDay * days * 0.5f);
+
+            // Produces Harvest object
+            Harvest harvest = new Harvest(mushrooms, days, cost);
+
+            return harvest;
+        }
+    }
+
+    static class Harvest{
+        Mushroom[] mushrooms;
+        int daysSpent;
+        float totalCost;
+
+        public Harvest(Mushroom[] mushrooms, int daysSpent, float totalCost){
+            this.mushrooms=mushrooms;
+            this.daysSpent= daysSpent;
+            this.totalCost=totalCost;
+        }
+        public void showHarvestDetails() {
+            System.out.println("Harvest Details:");
+            System.out.println("Mushrooms harvested: " + Arrays.toString(mushrooms));
+            System.out.println("Days farmed: " + daysSpent);
+            System.out.println("Total farming cost: Rs " + totalCost);
+        }
+    }
+}
